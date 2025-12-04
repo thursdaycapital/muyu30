@@ -1,0 +1,18 @@
+{
+  "accountAssociation": {
+    "header": "<replace-with-header>",
+    "payload": "<replace-with-payload>",
+    "signature": "<replace-with-signature>"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "木鱼28",
+    "iconUrl": "https://muyu30.vercel.app/muyu.svg",
+    "homeUrl": "https://muyu30.vercel.app/",
+    "imageUrl": "https://muyu30.vercel.app/og",
+    "buttonTitle": "木鱼28",
+    "splashImageUrl": "https://muyu30.vercel.app/muyu.svg",
+    "splashBackgroundColor": "#f6f1e8",
+    "webhookUrl": "https://example.com/api/webhook"
+  }
+}
