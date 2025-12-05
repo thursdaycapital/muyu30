@@ -17,14 +17,33 @@ type State = {
 const DAILY_LIMIT = Number(process.env.NEXT_PUBLIC_MAX_KNOCKS ?? 28);
 
 async function safeFetch(input: RequestInfo, init?: RequestInit) {
-  try {
-    if (sdk?.quickAuth?.fetch) {
-      return await sdk.quickAuth.fetch(input, init);
+  // 等待 SDK 初始化
+  let retries = 0;
+  const maxRetries = 10;
+  
+  while (retries < maxRetries) {
+    try {
+      // 检查 SDK 是否可用
+      if (sdk?.quickAuth?.fetch) {
+        const response = await sdk.quickAuth.fetch(input, init);
+        console.log("使用 quickAuth.fetch 成功");
+        return response;
+      }
+      
+      // 如果 SDK 还没准备好，等待一下再重试
+      if (retries < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+        continue;
+      }
+    } catch (error) {
+      console.warn("quickAuth fetch 失败，尝试普通 fetch:", error);
+      break;
     }
-  } catch (error) {
-    console.warn("quickAuth fetch failed, falling back", error);
   }
 
+  // 如果 quickAuth 不可用，使用普通 fetch
+  console.log("使用普通 fetch");
   return fetch(input, init);
 }
 
@@ -152,14 +171,34 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // 先等待 SDK 初始化
+      await ready();
+      
+      // 再等待一小段时间确保 SDK 完全准备好
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       try {
+        console.log("开始加载状态，SDK 状态:", {
+          hasSdk: !!sdk,
+          hasQuickAuth: !!sdk?.quickAuth,
+          hasFetch: !!sdk?.quickAuth?.fetch,
+        });
+        
         const res = await safeFetch("/api/state", { cache: "no-store" });
+        console.log("API 响应状态:", res.status, res.ok);
+        
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
           console.log("API 调用失败:", res.status, errorData);
           
-          // 如果是 401 未授权，设置一个默认状态允许演示
+          // 如果是 401 未授权
           if (res.status === 401) {
+            // 检查是否在 Farcaster 环境中
+            const isInFarcaster = typeof window !== 'undefined' && 
+              (window.location.href.includes('warpcast.com') || 
+               window.location.href.includes('farcaster.xyz') ||
+               navigator.userAgent.includes('Farcaster'));
+            
             if (!cancelled) {
               setState({
                 fid: 0,
@@ -168,13 +207,20 @@ export default function Home() {
                 remaining: DAILY_LIMIT,
                 leaderboard: [],
               });
-              setError("请在 Warpcast Mini App 内打开以获得完整功能。当前为演示模式。");
+              
+              if (isInFarcaster) {
+                // 在 Farcaster 中但认证失败，可能是配置问题
+                setError("认证失败，请检查环境配置。当前为演示模式。");
+              } else {
+                setError("请在 Warpcast Mini App 内打开以获得完整功能。当前为演示模式。");
+              }
             }
           } else {
             throw new Error(errorData.message || "加载失败");
           }
         } else {
           const data = (await res.json()) as State;
+          console.log("状态加载成功:", data);
           if (!cancelled) {
             setState(data);
             setError(null);
@@ -191,12 +237,22 @@ export default function Home() {
             remaining: DAILY_LIMIT,
             leaderboard: [],
           });
-          setError("网络错误，当前为演示模式。请在 Warpcast Mini App 内打开以获得完整功能。");
+          
+          // 检查是否在 Farcaster 环境中
+          const isInFarcaster = typeof window !== 'undefined' && 
+            (window.location.href.includes('warpcast.com') || 
+             window.location.href.includes('farcaster.xyz') ||
+             navigator.userAgent.includes('Farcaster'));
+          
+          if (isInFarcaster) {
+            setError("网络错误，当前为演示模式。请检查网络连接或稍后重试。");
+          } else {
+            setError("网络错误，当前为演示模式。请在 Warpcast Mini App 内打开以获得完整功能。");
+          }
         }
       } finally {
         if (!cancelled) {
           setLoading(false);
-          await ready();
         }
       }
     })();
