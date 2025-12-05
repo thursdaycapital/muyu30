@@ -155,16 +155,43 @@ export default function Home() {
       try {
         const res = await safeFetch("/api/state", { cache: "no-store" });
         if (!res.ok) {
-          throw new Error("需要在 Warpcast 中打开并登录");
-        }
-        const data = (await res.json()) as State;
-        if (!cancelled) {
-          setState(data);
+          const errorData = await res.json().catch(() => ({}));
+          console.log("API 调用失败:", res.status, errorData);
+          
+          // 如果是 401 未授权，设置一个默认状态允许演示
+          if (res.status === 401) {
+            if (!cancelled) {
+              setState({
+                fid: 0,
+                day: new Date().toISOString().slice(0, 10),
+                count: 0,
+                remaining: DAILY_LIMIT,
+                leaderboard: [],
+              });
+              setError("请在 Warpcast Mini App 内打开以获得完整功能。当前为演示模式。");
+            }
+          } else {
+            throw new Error(errorData.message || "加载失败");
+          }
+        } else {
+          const data = (await res.json()) as State;
+          if (!cancelled) {
+            setState(data);
+            setError(null);
+          }
         }
       } catch (err) {
-        console.error(err);
+        console.error("加载状态失败:", err);
         if (!cancelled) {
-          setError("请在 Warpcast Mini App 内打开，完成一次登录。");
+          // 设置默认状态，允许用户至少看到界面
+          setState({
+            fid: 0,
+            day: new Date().toISOString().slice(0, 10),
+            count: 0,
+            remaining: DAILY_LIMIT,
+            leaderboard: [],
+          });
+          setError("网络错误，当前为演示模式。请在 Warpcast Mini App 内打开以获得完整功能。");
         }
       } finally {
         if (!cancelled) {
@@ -197,6 +224,9 @@ export default function Home() {
     if (!canKnockNow) {
       console.log("今日次数已用完");
       setError("今天已经敲完啦，明天再来！");
+      // 即使次数用完，也播放音效和动画
+      playSound();
+      triggerKnockAnimation();
       return;
     }
     
@@ -205,6 +235,20 @@ export default function Home() {
     // 立即播放音效和动画（即使后端调用失败也要有反馈）
     playSound();
     triggerKnockAnimation();
+    
+    // 如果是演示模式（fid === 0），只更新本地状态，不调用后端
+    if (state.fid === 0) {
+      setState((prev) =>
+        prev
+          ? {
+              ...prev,
+              count: Math.min((prev.count ?? 0) + 1, DAILY_LIMIT),
+              remaining: Math.max(0, (prev.remaining ?? DAILY_LIMIT) - 1),
+            }
+          : prev
+      );
+      return;
+    }
     
     setBusy(true);
     setError(null);
@@ -242,7 +286,17 @@ export default function Home() {
       );
     } catch (err) {
       console.error("敲击请求失败:", err);
-      setError("网络有点慢，稍后再试一次。");
+      // 即使后端失败，也更新本地状态（演示模式）
+      setState((prev) =>
+        prev
+          ? {
+              ...prev,
+              count: Math.min((prev.count ?? 0) + 1, DAILY_LIMIT),
+              remaining: Math.max(0, (prev.remaining ?? DAILY_LIMIT) - 1),
+            }
+          : prev
+      );
+      setError("网络错误，已更新本地计数（演示模式）。");
     } finally {
       setBusy(false);
     }
