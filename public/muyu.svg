@@ -1,19 +1,88 @@
-<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="paint0" x1="40" y1="30" x2="160" y2="170" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F2D19C"/>
-      <stop offset="1" stop-color="#D88D3D"/>
+    <!-- 木鱼主体渐变 -->
+    <linearGradient id="woodGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5d5a8;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#d4a574;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#b8864f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5a2b;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="paint1" x1="80" y1="60" x2="140" y2="140" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FDF9F3"/>
-      <stop offset="1" stop-color="#F4E4CF"/>
-    </linearGradient>
+    
+    <!-- 高光渐变 -->
+    <radialGradient id="woodShine" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" style="stop-color:#fff9e6;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#f5d5a8;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#b8864f;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- 敲击面渐变 -->
+    <radialGradient id="hitSurface" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#e8c99a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b8864f;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- 阴影 -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  <rect x="15" y="15" width="170" height="170" rx="34" fill="url(#paint0)"/>
-  <circle cx="100" cy="100" r="58" fill="url(#paint1)"/>
-  <circle cx="100" cy="92" r="30" stroke="#D88D3D" stroke-width="10" fill="none"/>
-  <path d="M70 124C82 132 118 132 130 124" stroke="#D88D3D" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="68" cy="88" r="6" fill="#D88D3D"/>
-  <circle cx="132" cy="88" r="6" fill="#D88D3D"/>
-  <rect x="90" y="132" width="20" height="26" rx="10" fill="#D88D3D"/>
+  
+  <!-- 背景圆形 -->
+  <circle cx="100" cy="100" r="95" fill="#f6f1e8" opacity="0.3"/>
+  
+  <!-- 木鱼主体（椭圆形） -->
+  <ellipse cx="100" cy="120" rx="75" ry="50" fill="url(#woodGradient)" stroke="#8b5a2b" stroke-width="3" filter="url(#shadow)"/>
+  
+  <!-- 主体高光 -->
+  <ellipse cx="100" cy="100" rx="65" ry="40" fill="url(#woodShine)"/>
+  
+  <!-- 木鱼顶部（敲击面） -->
+  <ellipse cx="100" cy="90" rx="70" ry="28" fill="url(#woodGradient)" stroke="#8b5a2b" stroke-width="2.5"/>
+  
+  <!-- 敲击面中心圆 -->
+  <circle cx="100" cy="90" r="28" fill="url(#hitSurface)" stroke="#8b5a2b" stroke-width="2.5" opacity="0.9"/>
+  <circle cx="100" cy="90" r="22" fill="#c9a067" opacity="0.6"/>
+  <circle cx="100" cy="90" r="16" fill="#d4a574" opacity="0.4"/>
+  
+  <!-- 木鱼纹理线条（年轮效果） -->
+  <ellipse cx="100" cy="120" rx="68" ry="45" fill="none" stroke="#8b5a2b" stroke-width="1.5" opacity="0.3"/>
+  <ellipse cx="100" cy="120" rx="58" ry="38" fill="none" stroke="#8b5a2b" stroke-width="1.5" opacity="0.25"/>
+  <ellipse cx="100" cy="120" rx="48" ry="32" fill="none" stroke="#8b5a2b" stroke-width="1.5" opacity="0.2"/>
+  
+  <!-- 可爱表情 -->
+  <!-- 左眼 -->
+  <circle cx="88" cy="85" r="4" fill="#5a3a1a"/>
+  <circle cx="89" cy="84" r="1.5" fill="#fff"/>
+  
+  <!-- 右眼 -->
+  <circle cx="112" cy="85" r="4" fill="#5a3a1a"/>
+  <circle cx="113" cy="84" r="1.5" fill="#fff"/>
+  
+  <!-- 微笑 -->
+  <path d="M 88 95 Q 100 102 112 95" stroke="#5a3a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- 脸颊红晕 -->
+  <ellipse cx="75" cy="95" rx="6" ry="4" fill="#f4a5a5" opacity="0.4"/>
+  <ellipse cx="125" cy="95" rx="6" ry="4" fill="#f4a5a5" opacity="0.4"/>
+  
+  <!-- 木鱼两侧装饰圆点 -->
+  <circle cx="50" cy="110" r="6" fill="#8b5a2b" opacity="0.5"/>
+  <circle cx="150" cy="110" r="6" fill="#8b5a2b" opacity="0.5"/>
+  
+  <!-- 木鱼底部支撑 -->
+  <rect x="88" y="160" width="24" height="18" rx="6" fill="#8b5a2b" opacity="0.7"/>
+  <ellipse cx="100" cy="160" rx="12" ry="6" fill="#6b4e0f" opacity="0.8"/>
+  
+  <!-- 装饰星星（增加可爱感） -->
+  <g opacity="0.6">
+    <path d="M 100 70 L 101.5 73.5 L 105 74 L 102 76.5 L 102.5 80 L 100 78 L 97.5 80 L 98 76.5 L 95 74 L 98.5 73.5 Z" fill="#f5d5a8"/>
+  </g>
 </svg>
