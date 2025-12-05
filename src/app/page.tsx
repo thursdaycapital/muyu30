@@ -310,6 +310,43 @@ export default function Home() {
     }
   };
 
+  const shareApp = async () => {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    const shareText = `每天敲木鱼 28 次，一起来打卡！\n${appUrl}`;
+    const shareData = {
+      title: "木鱼28",
+      text: shareText,
+      url: appUrl,
+    };
+
+    try {
+      // 尝试使用 Web Share API（移动端和部分桌面浏览器支持）
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log("分享成功");
+      } else {
+        // 如果不支持 Web Share API，则复制链接到剪贴板
+        await navigator.clipboard.writeText(appUrl);
+        setError("链接已复制到剪贴板！");
+        setTimeout(() => setError(null), 3000);
+      }
+    } catch (err: any) {
+      // 用户取消分享或出错
+      if (err.name !== "AbortError") {
+        // 如果 Web Share 失败，尝试复制到剪贴板
+        try {
+          await navigator.clipboard.writeText(appUrl);
+          setError("链接已复制到剪贴板！");
+          setTimeout(() => setError(null), 3000);
+        } catch (clipboardErr) {
+          console.error("复制失败:", clipboardErr);
+          setError("分享失败，请手动复制链接");
+          setTimeout(() => setError(null), 3000);
+        }
+      }
+    }
+  };
+
   const progress = useMemo(() => {
     const current = state?.count ?? 0;
     return Math.min(100, Math.round((current / DAILY_LIMIT) * 100));
@@ -329,12 +366,20 @@ export default function Home() {
             {state?.day ? `今天 · ${formatDayLabel(state.day)}` : "加载中..."}
           </p>
         </div>
-        <button
-          onClick={addMiniApp}
-          className="rounded-full bg-[#7f4f1d] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7f4f1d]/30 transition hover:scale-[1.02] active:scale-[0.99]"
-        >
-          收藏
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={shareApp}
+            className="rounded-full bg-[#7f4f1d] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7f4f1d]/30 transition hover:scale-[1.02] active:scale-[0.99]"
+          >
+            分享
+          </button>
+          <button
+            onClick={addMiniApp}
+            className="rounded-full bg-[#7f4f1d] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7f4f1d]/30 transition hover:scale-[1.02] active:scale-[0.99]"
+          >
+            收藏
+          </button>
+        </div>
       </header>
 
       <section className="mt-6 rounded-3xl border border-white/60 bg-white/70 p-5 shadow-lg shadow-[#7f4f1d]/10 backdrop-blur">
