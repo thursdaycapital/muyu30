@@ -4,11 +4,13 @@ export const runtime = "edge";
 export const alt = "木鱼28";
 export const size = {
   width: 1200,
-  height: 800,
+  height: 630,
 };
+export const contentType = "image/png";
 
 export async function GET() {
-  return new ImageResponse(
+  try {
+    return new ImageResponse(
     (
       <div
         style={{
@@ -94,6 +96,40 @@ export async function GET() {
         </div>
       </div>
     ),
-    size
+    {
+      ...size,
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    }
   );
+  } catch (error) {
+    console.error("OG 图片生成失败:", error);
+    // 返回一个简单的错误图片
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            background: "#f6f1e8",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 48,
+            color: "#1f150a",
+          }}
+        >
+          木鱼28
+        </div>
+      ),
+      {
+        ...size,
+        headers: {
+          "Content-Type": "image/png",
+        },
+      }
+    );
+  }
 }

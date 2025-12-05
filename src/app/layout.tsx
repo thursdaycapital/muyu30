@@ -35,6 +35,22 @@ export const metadata: Metadata = {
   title: "木鱼28",
   description: "每天敲木鱼28次，保平安也保坚持。",
   openGraph: {
+    type: "website",
+    title: "木鱼28",
+    description: "每天敲木鱼28次，带上好友一起打卡。",
+    url: appUrl,
+    siteName: "木鱼28",
+    images: [
+      {
+        url: `${appUrl}/og`,
+        width: 1200,
+        height: 630,
+        alt: "木鱼28 - 每天敲木鱼28次",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
     title: "木鱼28",
     description: "每天敲木鱼28次，带上好友一起打卡。",
     images: [`${appUrl}/og`],
