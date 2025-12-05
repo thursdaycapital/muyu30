@@ -52,7 +52,21 @@ export default function Home() {
   const playSound = () => {
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const audioContext = new AudioContext();
+      
+      // 如果 AudioContext 处于 suspended 状态，需要用户交互来恢复
+      let audioContext: AudioContext;
+      try {
+        audioContext = new AudioContext();
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().catch(err => {
+            console.warn("无法恢复音频上下文:", err);
+          });
+        }
+      } catch (err) {
+        console.warn("无法创建音频上下文:", err);
+        return;
+      }
+      
       const now = audioContext.currentTime;
       
       // 主音调 - 木鱼的基础频率（中低音）
@@ -166,10 +180,29 @@ export default function Home() {
   }, []);
 
   const knock = async () => {
-    const canKnockNow = (state?.remaining ?? 0) > 0 && !busy;
-    if (busy || !state || !canKnockNow) return;
+    // 防止重复点击
+    if (busy) {
+      console.log("正在处理中，请稍候...");
+      return;
+    }
+
+    // 检查状态
+    if (!state) {
+      console.log("状态未加载完成，请稍候...");
+      setError("正在加载，请稍候...");
+      return;
+    }
+
+    const canKnockNow = (state.remaining ?? 0) > 0;
+    if (!canKnockNow) {
+      console.log("今日次数已用完");
+      setError("今天已经敲完啦，明天再来！");
+      return;
+    }
     
-    // 播放音效和动画
+    console.log("开始敲击木鱼...");
+    
+    // 立即播放音效和动画（即使后端调用失败也要有反馈）
     playSound();
     triggerKnockAnimation();
     
@@ -181,6 +214,7 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) {
+        console.log("敲击失败:", data.message);
         setError(data.message ?? "今天已经敲完啦");
         setState((prev) =>
           prev
@@ -195,6 +229,7 @@ export default function Home() {
         return;
       }
 
+      console.log("敲击成功:", data);
       setState((prev) =>
         prev
           ? {
@@ -206,7 +241,7 @@ export default function Home() {
           : data
       );
     } catch (err) {
-      console.error(err);
+      console.error("敲击请求失败:", err);
       setError("网络有点慢，稍后再试一次。");
     } finally {
       setBusy(false);
@@ -294,14 +329,24 @@ export default function Home() {
             {/* 木鱼图标 */}
             <div
               ref={muyuRef}
-              className="relative transition-transform duration-150 ease-out cursor-pointer"
-              onClick={knock}
+              className="relative transition-transform duration-150 ease-out cursor-pointer select-none"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("木鱼被点击，当前状态:", { state, busy, canKnock });
+                knock();
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                console.log("木鱼被触摸，当前状态:", { state, busy, canKnock });
+                knock();
+              }}
               style={{ transformOrigin: "center center" }}
             >
               <img
                 src="/muyu/muyu-icon.svg"
                 alt="木鱼"
-                className={`h-40 w-40 ${canKnock && !busy ? "hover:opacity-90" : "opacity-60"} transition-opacity`}
+                className={`h-40 w-40 ${canKnock && !busy ? "hover:opacity-90 active:opacity-75" : "opacity-60"} transition-opacity pointer-events-none`}
                 draggable={false}
               />
             </div>
@@ -309,7 +354,12 @@ export default function Home() {
 
           {/* 敲击提示文字 */}
           <button
-            onClick={knock}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("按钮被点击，当前状态:", { state, busy, canKnock });
+              knock();
+            }}
             disabled={!canKnock}
             className="mt-6 w-full rounded-2xl bg-gradient-to-b from-[#f2d19c] to-[#d88d3d] px-6 py-4 text-center text-lg font-semibold text-[#1f150a] shadow-lg shadow-[#d88d3d]/30 transition hover:translate-y-[-2px] hover:shadow-xl active:translate-y-[0px] disabled:cursor-not-allowed disabled:from-[#d5c7b0] disabled:to-[#c2a273]"
           >
