@@ -104,16 +104,16 @@ export async function leaderboard(
   limit = 10
 ): Promise<LeaderboardEntry[]> {
   if (hasKv) {
-    const rows = await kv.zrange<{ member: string; score: number }>(
+    const rows = await kv.zrange<[string, number][]>(
       kvLeaderboardKey(dayKey),
       0,
       limit - 1,
       { rev: true, withScores: true }
     );
 
-    return rows.map((row) => ({
-      fid: Number(row.member),
-      count: Number(row.score),
+    return rows.map(([member, score]) => ({
+      fid: Number(member),
+      count: Number(score),
     }));
   }
 
