@@ -1,0 +1,47 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 木鱼主体 -->
+  <defs>
+    <linearGradient id="woodGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a574;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#b8864f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5a2b;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="woodShine" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" style="stop-color:#f5d5a8;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#b8864f;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- 木鱼底部阴影 -->
+  <ellipse cx="100" cy="180" rx="70" ry="15" fill="#5a3a1a" opacity="0.3"/>
+  
+  <!-- 木鱼主体（椭圆形） -->
+  <ellipse cx="100" cy="120" rx="75" ry="50" fill="url(#woodGradient)" stroke="#8b5a2b" stroke-width="3"/>
+  
+  <!-- 高光效果 -->
+  <ellipse cx="100" cy="100" rx="60" ry="35" fill="url(#woodShine)"/>
+  
+  <!-- 木鱼纹理线条 -->
+  <ellipse cx="100" cy="120" rx="65" ry="42" fill="none" stroke="#8b5a2b" stroke-width="1.5" opacity="0.4"/>
+  <ellipse cx="100" cy="120" rx="55" ry="35" fill="none" stroke="#8b5a2b" stroke-width="1.5" opacity="0.3"/>
+  
+  <!-- 木鱼顶部（敲击面） -->
+  <ellipse cx="100" cy="90" rx="70" ry="25" fill="url(#woodGradient)" stroke="#8b5a2b" stroke-width="2.5"/>
+  
+  <!-- 敲击面中心圆 -->
+  <circle cx="100" cy="90" r="25" fill="#a67c52" opacity="0.6" stroke="#8b5a2b" stroke-width="2"/>
+  <circle cx="100" cy="90" r="18" fill="#b8864f" opacity="0.4"/>
+  
+  <!-- 木鱼两侧装饰 -->
+  <circle cx="50" cy="110" r="8" fill="#8b5a2b" opacity="0.5"/>
+  <circle cx="150" cy="110" r="8" fill="#8b5a2b" opacity="0.5"/>
+  
+  <!-- 木鱼底部支撑 -->
+  <rect x="85" y="160" width="30" height="20" rx="5" fill="#8b5a2b" opacity="0.7"/>
+  
+  <!-- 可爱表情（可选） -->
+  <circle cx="90" cy="85" r="3" fill="#5a3a1a"/>
+  <circle cx="110" cy="85" r="3" fill="#5a3a1a"/>
+  <path d="M 90 95 Q 100 100 110 95" stroke="#5a3a1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>
+

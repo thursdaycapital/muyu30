@@ -33,7 +33,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isKnocking, setIsKnocking] = useState(false);
   const readySent = useRef(false);
+  const muyuRef = useRef<HTMLDivElement>(null);
+  const stickRef = useRef<HTMLDivElement>(null);
 
   const ready = async () => {
     if (readySent.current) return;
@@ -43,6 +46,93 @@ export default function Home() {
     } catch (err) {
       console.warn("ready() failed", err);
     }
+  };
+
+  // 使用 Web Audio API 生成木鱼敲击音效
+  const playSound = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const audioContext = new AudioContext();
+      const now = audioContext.currentTime;
+      
+      // 主音调 - 木鱼的基础频率（中低音）
+      const createTone = (freq: number, startTime: number, duration: number, volume: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(freq, startTime);
+        oscillator.type = 'sine';
+        
+        // 快速起音，缓慢衰减，模拟木鱼的回响
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.005); // 快速起音
+        gainNode.gain.exponentialRampToValueAtTime(volume * 0.1, startTime + duration * 0.3); // 快速衰减
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration); // 缓慢消失
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+        
+        return { oscillator, gainNode };
+      };
+      
+      // 创建多个谐波，模拟木鱼的丰富音色
+      const tones = [
+        createTone(180, now, 0.6, 0.25), // 基础音
+        createTone(360, now, 0.5, 0.15), // 二次谐波
+        createTone(540, now, 0.4, 0.08), // 三次谐波
+        createTone(270, now + 0.05, 0.4, 0.1), // 轻微延迟的泛音，增加回响感
+      ];
+      
+      // 清理资源
+      const cleanup = () => {
+        tones.forEach(({ oscillator, gainNode }) => {
+          try {
+            oscillator.disconnect();
+            gainNode.disconnect();
+          } catch (e) {
+            // 忽略已断开连接的错误
+          }
+        });
+      };
+      
+      // 在最后一个音调结束后清理
+      setTimeout(cleanup, 700);
+    } catch (err) {
+      console.warn("音效播放失败:", err);
+    }
+  };
+
+  // 触发敲击动画
+  const triggerKnockAnimation = () => {
+    setIsKnocking(true);
+    
+    // 木鱼缩放动画
+    if (muyuRef.current) {
+      muyuRef.current.style.transform = "scale(0.95)";
+      setTimeout(() => {
+        if (muyuRef.current) {
+          muyuRef.current.style.transform = "scale(1)";
+        }
+      }, 150);
+    }
+
+    // 敲击棒动画
+    if (stickRef.current) {
+      stickRef.current.style.transform = "translateY(20px) rotate(-5deg)";
+      setTimeout(() => {
+        if (stickRef.current) {
+          stickRef.current.style.transform = "translateY(0) rotate(0deg)";
+        }
+      }, 200);
+    }
+
+    // 重置动画状态
+    setTimeout(() => {
+      setIsKnocking(false);
+    }, 300);
   };
 
   useEffect(() => {
@@ -76,7 +166,13 @@ export default function Home() {
   }, []);
 
   const knock = async () => {
-    if (busy || !state) return;
+    const canKnockNow = (state?.remaining ?? 0) > 0 && !busy;
+    if (busy || !state || !canKnockNow) return;
+    
+    // 播放音效和动画
+    playSound();
+    triggerKnockAnimation();
+    
     setBusy(true);
     setError(null);
 
@@ -178,19 +274,54 @@ export default function Home() {
           />
         </div>
 
-        <button
-          onClick={knock}
-          disabled={!canKnock}
-          className="mt-6 w-full rounded-2xl bg-gradient-to-b from-[#f2d19c] to-[#d88d3d] px-6 py-6 text-center text-xl font-semibold text-[#1f150a] shadow-lg shadow-[#d88d3d]/30 transition hover:translate-y-[-2px] hover:shadow-xl active:translate-y-[0px] disabled:cursor-not-allowed disabled:from-[#d5c7b0] disabled:to-[#c2a273]"
-        >
-          {loading
-            ? "加载中..."
-            : canKnock
-              ? busy
-                ? "敲击中..."
-                : "敲一敲"
-              : "明天再来"}
-        </button>
+        {/* 木鱼敲击区域 */}
+        <div className="mt-8 flex flex-col items-center justify-center">
+          <div className="relative flex items-center justify-center">
+            {/* 敲击棒 */}
+            <div
+              ref={stickRef}
+              className="absolute -top-8 -right-8 z-10 transition-transform duration-200 ease-out"
+              style={{ transformOrigin: "bottom center" }}
+            >
+              <img
+                src="/muyu/stick.svg"
+                alt="敲击棒"
+                className="h-24 w-14"
+                draggable={false}
+              />
+            </div>
+
+            {/* 木鱼图标 */}
+            <div
+              ref={muyuRef}
+              className="relative transition-transform duration-150 ease-out cursor-pointer"
+              onClick={knock}
+              style={{ transformOrigin: "center center" }}
+            >
+              <img
+                src="/muyu/muyu-icon.svg"
+                alt="木鱼"
+                className={`h-40 w-40 ${canKnock && !busy ? "hover:opacity-90" : "opacity-60"} transition-opacity`}
+                draggable={false}
+              />
+            </div>
+          </div>
+
+          {/* 敲击提示文字 */}
+          <button
+            onClick={knock}
+            disabled={!canKnock}
+            className="mt-6 w-full rounded-2xl bg-gradient-to-b from-[#f2d19c] to-[#d88d3d] px-6 py-4 text-center text-lg font-semibold text-[#1f150a] shadow-lg shadow-[#d88d3d]/30 transition hover:translate-y-[-2px] hover:shadow-xl active:translate-y-[0px] disabled:cursor-not-allowed disabled:from-[#d5c7b0] disabled:to-[#c2a273]"
+          >
+            {loading
+              ? "加载中..."
+              : canKnock
+                ? busy
+                  ? "敲击中..."
+                  : "点击木鱼敲一敲"
+                : "明天再来"}
+          </button>
+        </div>
         {error && (
           <p className="mt-3 text-sm text-[#a03d2a]">
             {error}
